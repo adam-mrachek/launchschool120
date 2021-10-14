@@ -1,11 +1,29 @@
 require 'pry'
 
 class Player
-  attr_accessor :move
+  attr_accessor :move, :name
 
   def initialize(player_type = :human)
     @player_type = player_type
     @move = nil
+    set_name
+  end
+
+  def set_name
+    if human?
+      input = nil
+
+      loop do
+        puts "Please enter your name (cannot be blank):"
+        input = gets.chomp
+        break unless input.empty?
+        puts "Not a valid name."
+      end
+  
+      self.name = input
+    else
+      self.name = ['Homer', 'Bart', 'Lisa', 'Marge'].sample
+    end
   end
 
   def choose
@@ -29,24 +47,6 @@ class Player
   end
 end
 
-class Move
-  def initialize
-    # seems like we need something to keep track
-    # of the choice... a move object can be "paper", "rock" or "scissors"
-  end
-end
-
-class Rule
-  def initialize
-    # not sure what the "state" of a rule object should be
-  end
-end
-
-# not sure where "compare" goes yet
-def compare(move1, move2)
-
-end
-
 class RPSGame
   attr_accessor :human, :computer
 
@@ -62,7 +62,7 @@ class RPSGame
   end
 
   def display_welcome_message
-    puts "Welcome to Rock, Paper, Scissors!"
+    puts "Hi, #{human.name}. Welcome to Rock, Paper, Scissors!"
   end
 
   def display_goodbye_message
@@ -70,23 +70,41 @@ class RPSGame
   end
 
   def display_winner
-    puts "You chose #{human.move}."
-    puts "The computer chose #{computer.move}."
+    puts "#{human.name} chose #{human.move}."
+    puts "#{computer.name} chose #{computer.move}."
     puts "-------------------"
     if WINNING_MOVES[human.move] == computer.move
-      puts "You won the game!"
+      puts "#{human.name} won the game!"
     elsif WINNING_MOVES[computer.move] == human.move
-      puts "Computer won the game!"
+      puts "#{computer.name} won the game!"
     else
       puts "It's a tie!"
     end
   end
 
+  def play_again?
+    response = nil
+
+    loop do
+      puts "Would you like to play again? (y/n)"
+      response = gets.chomp.downcase
+      break if %(y n).include?(response)
+      puts "Not a valid input."
+    end
+
+    response == 'y'
+  end
+
   def play
     display_welcome_message
-    human.choose
-    computer.choose
-    display_winner
+
+    loop do
+      human.choose
+      computer.choose
+      display_winner
+      break unless play_again?
+    end
+
     display_goodbye_message
   end
 end
