@@ -103,9 +103,13 @@ class TTTGame
   COMPUTER_MARKER = 'O'
 
   def initialize
-    @board = Board.new
+    initialize_board
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
+  end
+
+  def initialize_board
+    @board = Board.new
   end
 
   def display_welcome_message
@@ -159,20 +163,41 @@ class TTTGame
     end
   end
 
-  def play
-    display_welcome_message
-    loop do
-      display_board
-      human_moves
-      display_board
-      break if board.someone_won? || board.full?
+  def play_again?
+    response = nil
 
-      computer_moves
-      break if board.someone_won? || board.full?
+    loop do
+      puts "Would you like to play again? (y or n)"
+      response = gets.chomp.downcase
+      break if %(y n).include?(response)
+      puts "Not a valid input."
     end
 
-    display_board
-    display_result
+    response == 'y'
+  end
+
+  def play
+    display_welcome_message
+
+    loop do
+      initialize_board
+
+      loop do
+        display_board
+        human_moves
+        display_board
+        break if board.someone_won? || board.full?
+  
+        computer_moves
+        break if board.someone_won? || board.full?
+      end
+  
+      display_board
+      display_result
+
+      break unless play_again?
+    end
+
     display_goodbye_message
   end
 end
