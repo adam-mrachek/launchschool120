@@ -50,10 +50,10 @@ class Board
   def detect_winner
     WINNING_LINES.each do |line|
       markers = @squares.fetch_values(line[0], line[1], line[2])
-      if markers.all? { |marker| "#{marker}" == 'X'}
-        return 'X'
-      elsif markers.all? { |marker| "#{marker}" == 'O'}
-        return 'O'
+      if markers.all? { |marker| "#{marker}" == TTTGame::HUMAN_MARKER }
+        return TTTGame::HUMAN_MARKER
+      elsif markers.all? { |marker| "#{marker}" == TTTGame::COMPUTER_MARKER }
+        return TTTGame::COMPUTER_MARKER
       end
     end
     nil
@@ -99,10 +99,13 @@ end
 class TTTGame
   attr_reader :board, :human, :computer
 
+  HUMAN_MARKER = 'X'
+  COMPUTER_MARKER = 'O'
+
   def initialize
     @board = Board.new
-    @human = Player.new('X')
-    @computer = Player.new('O')
+    @human = Player.new(HUMAN_MARKER)
+    @computer = Player.new(COMPUTER_MARKER)
   end
 
   def display_welcome_message
@@ -149,9 +152,9 @@ class TTTGame
 
   def display_result
     winner = board.detect_winner
-    if winner == 'X'
+    if winner == HUMAN_MARKER
       puts "Congratulations! You won the game!"
-    elsif winner == 'O'
+    elsif winner == COMPUTER_MARKER
       puts "Computer won the game!"
     end
   end
