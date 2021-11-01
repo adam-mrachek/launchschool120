@@ -49,7 +49,7 @@ class Board
 
   def detect_winner
     WINNING_LINES.each do |line|
-      markers = @squares.fetch_values(line[0], line[1], line[2])
+      markers = @squares.fetch_values(*line)
       if markers.all? { |marker| "#{marker}" == TTTGame::HUMAN_MARKER }
         return TTTGame::HUMAN_MARKER
       elsif markers.all? { |marker| "#{marker}" == TTTGame::COMPUTER_MARKER }
@@ -120,7 +120,8 @@ class TTTGame
     puts "Thanks for playing. Good bye!"
   end
 
-  def display_board
+  def display_board(clear = true)
+    clear_screen if clear
     puts ""
     puts "     |     |     "
     puts "  #{board.square(1)}  |  #{board.square(2)}  |  #{board.square(3)}"
@@ -170,12 +171,16 @@ class TTTGame
       puts "Would you like to play again? (y or n)"
       response = gets.chomp.downcase
       break if %(y n).include?(response)
-      puts "Not a valid input."
+      puts "Sorry, please enter 'y' or 'n'."
     end
 
     response == 'y'
   end
 
+  def clear_screen
+    system "clear"
+  end
+  
   def play
     display_welcome_message
 
@@ -183,19 +188,23 @@ class TTTGame
       initialize_board
 
       loop do
-        display_board
+        display_board(false)
         human_moves
         display_board
         break if board.someone_won? || board.full?
   
         computer_moves
         break if board.someone_won? || board.full?
+        clear_screen
       end
   
       display_board
       display_result
 
       break unless play_again?
+      clear_screen
+      puts "Let's play again!"
+      puts ""
     end
 
     display_goodbye_message
