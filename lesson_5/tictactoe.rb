@@ -10,8 +10,6 @@
 # - mark
 # - play
 
-require 'pry'
-
 class Board
   INITIAL_MARKER = " "
   WINNING_LINES = [
@@ -20,18 +18,14 @@ class Board
     [1, 5, 9], [3, 5, 7]
   ]
 
-  attr_reader :squares
+  attr_reader :squares, :winner
 
   def initialize
     @squares = {}
     (1..9).each { |key| @squares[key] = Square.new(INITIAL_MARKER) }
   end
 
-  def square(key)
-    @squares[key]
-  end
-
-  def set_square(key, marker)
+  def []=(key, marker)
     @squares[key].marker = marker
   end
 
@@ -43,20 +37,36 @@ class Board
     open_squares.empty?
   end
 
-  def someone_won?
-    !!detect_winner
+  def someone_won?(player1, player2)
+    !!winning_marker(player1, player2)
   end
 
-  def detect_winner
+  def winning_marker(player1, player2)
     WINNING_LINES.each do |line|
       markers = @squares.fetch_values(*line)
-      if markers.all? { |marker| "#{marker}" == TTTGame::HUMAN_MARKER }
-        return TTTGame::HUMAN_MARKER
-      elsif markers.all? { |marker| "#{marker}" == TTTGame::COMPUTER_MARKER }
-        return TTTGame::COMPUTER_MARKER
+      if markers.all? { |marker| "#{marker}" == player1.marker }
+        @winner = player1
+        return player1.marker
+      elsif markers.all? { |marker| "#{marker}" == player2.marker }
+        @winner = player2
+        return player2.marker
       end
     end
     nil
+  end
+
+  def draw
+    puts "     |     |     "
+    puts "  #{squares[1]}  |  #{squares[2]}  |  #{squares[3]}"
+    puts "     |     |     "
+    puts "-----|-----|-----"
+    puts "     |     |     "
+    puts "  #{squares[4]}  |  #{squares[5]}  |  #{squares[6]}"
+    puts "     |     |     "
+    puts "-----|-----|-----"
+    puts "     |     |     "
+    puts "  #{squares[7]}  |  #{squares[8]}  |  #{squares[9]}"
+    puts "     |     |     "
   end
 end
 
@@ -107,6 +117,36 @@ class TTTGame
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
   end
+  
+  def play
+    clear
+    display_welcome_message
+
+    loop do
+      initialize_board
+
+      loop do
+        display_board
+        human_moves
+        clear_screen_and_display_board
+        break if board.someone_won?(human, computer) || board.full?
+  
+        computer_moves
+        break if board.someone_won?(human, computer) || board.full?
+        clear
+      end
+  
+      clear_screen_and_display_board
+      display_result
+
+      break unless play_again?
+      reset
+    end
+
+    display_goodbye_message
+  end
+
+  private
 
   def initialize_board
     @board = Board.new
@@ -120,21 +160,16 @@ class TTTGame
     puts "Thanks for playing. Good bye!"
   end
 
-  def display_board(clear = true)
-    clear_screen if clear
+  def display_board
+    puts "You are #{human.marker}. Computer is #{computer.marker}."
     puts ""
-    puts "     |     |     "
-    puts "  #{board.square(1)}  |  #{board.square(2)}  |  #{board.square(3)}"
-    puts "     |     |     "
-    puts "-----|-----|-----"
-    puts "     |     |     "
-    puts "  #{board.square(4)}  |  #{board.square(5)}  |  #{board.square(6)}"
-    puts "     |     |     "
-    puts "-----|-----|-----"
-    puts "     |     |     "
-    puts "  #{board.square(7)}  |  #{board.square(8)}  |  #{board.square(9)}"
-    puts "     |     |     "
-    puts ""
+    board.draw
+    puts
+  end
+
+  def clear_screen_and_display_board
+    clear
+    display_board
   end
 
   def human_moves
@@ -147,19 +182,19 @@ class TTTGame
       puts "Sorry, that's not a valid choice."
     end
 
-    board.set_square(square, human.marker)
+    board[square] = human.marker
   end
 
   def computer_moves
     square = board.open_squares.sample
-    board.set_square(square, computer.marker)
+    board[square] = computer.marker
   end
 
   def display_result
-    winner = board.detect_winner
-    if winner == HUMAN_MARKER
+    winner = board.winner
+    if winner.marker == HUMAN_MARKER
       puts "Congratulations! You won the game!"
-    elsif winner == COMPUTER_MARKER
+    elsif winner.marker == COMPUTER_MARKER
       puts "Computer won the game!"
     end
   end
@@ -177,37 +212,14 @@ class TTTGame
     response == 'y'
   end
 
-  def clear_screen
-    system "clear"
+  def reset
+    clear
+    puts "Let's play again!"
+    puts ""
   end
-  
-  def play
-    display_welcome_message
 
-    loop do
-      initialize_board
-
-      loop do
-        display_board(false)
-        human_moves
-        display_board
-        break if board.someone_won? || board.full?
-  
-        computer_moves
-        break if board.someone_won? || board.full?
-        clear_screen
-      end
-  
-      display_board
-      display_result
-
-      break unless play_again?
-      clear_screen
-      puts "Let's play again!"
-      puts ""
-    end
-
-    display_goodbye_message
+  def clear
+    system "clear"
   end
 end
 
