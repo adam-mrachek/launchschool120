@@ -1,17 +1,3 @@
-# Tic Tac Toe is a 2-player board game played on a 3X3 grid.
-# Players take turns marking a square - the first player to mark 3 squares in a row wins.
-
-# Nouns: board, player, square, grid
-# Verbs: play, mark
-
-# Board
-# Square
-# Player
-# - mark
-# - play
-
-require 'pry'
-
 class Board
   WINNING_LINES = [
     [1, 2, 3], [4, 5, 6], [7, 8, 9],
@@ -31,15 +17,15 @@ class Board
   end
 
   def open_squares
-    squares.select{ |k, v| v.marker == " " }.keys
+    squares.select { |_, v| v.marker == " " }.keys
   end
 
   def full?
     open_squares.empty?
   end
 
-  def someone_won?(player1, player2)
-    !!winning_marker(player1, player2)
+  def someone_won?
+    !!winning_marker
   end
 
   def three_identical_markers?(squares)
@@ -48,7 +34,7 @@ class Board
     markers.min == markers.max
   end
 
-  def winning_marker(player1, player2)
+  def winning_marker
     WINNING_LINES.each do |line|
       squares = @squares.values_at(*line)
       if three_identical_markers?(squares)
@@ -99,10 +85,6 @@ class Player
     @marker = marker
   end
 
-  def mark
-
-  end
-
   def choose_marker
     choice = nil
 
@@ -128,7 +110,7 @@ class TTTGame
     @human = Player.new(HUMAN_MARKER)
     @computer = Player.new(COMPUTER_MARKER)
   end
-  
+
   def play
     clear
     display_welcome_message
@@ -140,13 +122,13 @@ class TTTGame
         display_board
         human_moves
         clear_screen_and_display_board
-        break if board.someone_won?(human, computer) || board.full?
-  
+        break if board.someone_won? || board.full?
+
         computer_moves
-        break if board.someone_won?(human, computer) || board.full?
+        break if board.someone_won? || board.full?
         clear
       end
-  
+
       clear_screen_and_display_board
       display_result
 
@@ -203,9 +185,11 @@ class TTTGame
 
   def display_result
     winner = board.winner
-    if winner == HUMAN_MARKER
+
+    case winner
+    when HUMAN_MARKER
       puts "Congratulations! You won the game!"
-    elsif winner == COMPUTER_MARKER
+    when COMPUTER_MARKER
       puts "Computer won the game!"
     end
   end
