@@ -10,8 +10,9 @@
 # - mark
 # - play
 
+require 'pry'
+
 class Board
-  INITIAL_MARKER = " "
   WINNING_LINES = [
     [1, 2, 3], [4, 5, 6], [7, 8, 9],
     [1, 4, 7], [2, 5, 8], [3, 6, 9],
@@ -22,7 +23,7 @@ class Board
 
   def initialize
     @squares = {}
-    (1..9).each { |key| @squares[key] = Square.new(INITIAL_MARKER) }
+    (1..9).each { |key| @squares[key] = Square.new }
   end
 
   def []=(key, marker)
@@ -41,15 +42,18 @@ class Board
     !!winning_marker(player1, player2)
   end
 
+  def three_identical_markers?(squares)
+    markers = squares.select(&:marked?).collect(&:marker)
+    return false if markers.size != 3
+    markers.min == markers.max
+  end
+
   def winning_marker(player1, player2)
     WINNING_LINES.each do |line|
-      markers = @squares.fetch_values(*line)
-      if markers.all? { |marker| "#{marker}" == player1.marker }
-        @winner = player1
-        return player1.marker
-      elsif markers.all? { |marker| "#{marker}" == player2.marker }
-        @winner = player2
-        return player2.marker
+      squares = @squares.values_at(*line)
+      if three_identical_markers?(squares)
+        @winner = squares.first.marker
+        return @winner
       end
     end
     nil
@@ -72,12 +76,19 @@ end
 
 class Square
   attr_accessor :marker
-  def initialize(marker)
+
+  INITIAL_MARKER = " "
+
+  def initialize(marker = INITIAL_MARKER)
     @marker = marker
   end
 
   def to_s
     @marker
+  end
+
+  def marked?
+    marker != INITIAL_MARKER
   end
 end
 
@@ -192,9 +203,9 @@ class TTTGame
 
   def display_result
     winner = board.winner
-    if winner.marker == HUMAN_MARKER
+    if winner == HUMAN_MARKER
       puts "Congratulations! You won the game!"
-    elsif winner.marker == COMPUTER_MARKER
+    elsif winner == COMPUTER_MARKER
       puts "Computer won the game!"
     end
   end
