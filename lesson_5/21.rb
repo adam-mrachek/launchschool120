@@ -10,18 +10,13 @@ module Hand
   end
 
   def total
-    sum = 0
-    hand.each do |card|
-      if card.rank != 'Ace'
-        sum += card.value
-      else
-        if sum < 21
-          sum += card.value(:under_21)
-        else
-          sum += card.value(:over_21)
-        end
-      end
+    sum = hand.sum(&:value)
+
+    hand.select { |card| card.rank == 'Ace' }.count.times do
+      break if sum <= 21
+      sum -= 10
     end
+
     sum
   end
 end
@@ -57,10 +52,7 @@ class Card
     'Jack' => 10,
     'Queen' => 10,
     'King' => 10,
-    'Ace' => {
-      under_21: 11,
-      over_21: 1
-    }
+    'Ace' => 11
   }
 
   def initialize(rank, suit)
@@ -72,9 +64,8 @@ class Card
     RANKS.fetch(rank, rank) <=> RANKS.fetch(other_card.rank, other_card.rank)
   end
 
-  def value(ace_value = nil)
-    return RANKS.fetch(rank, rank) unless ace_value
-    RANKS['Ace'][ace_value]
+  def value
+    RANKS.fetch(rank, rank)
   end
 
   def to_s
@@ -134,7 +125,7 @@ class Game
     puts "#{player.class} Total: #{player.total}"
     puts ""
   end
-  
+
   def show_initial_cards
     show_cards(player)
 
@@ -146,22 +137,24 @@ class Game
     puts ""
   end
 
-  def player_turn
+  def hit?
     response = nil
-     loop do
-      loop do
-        puts "Hit or stay? ('h' or 's')"
-        response = gets.chomp.downcase
-        break if %w(h s).include?(response)
-        puts "That's not a valid input."
-      end
+    loop do
+      puts "Hit or stay? ('h' or 's')"
+      response = gets.chomp.downcase
+      break if %w(h s).include?(response)
+      puts "That's not a valid input."
+    end
+    response == 'h'
+  end
 
-      if response == 'h'
+  def player_turn
+    loop do
+      if hit?
         puts "Player hits!"
         player.hand << dealer.deal(deck)
         show_cards(player)
       else
-        puts "Player has chosen to stay."
         break
       end
 
@@ -170,7 +163,7 @@ class Game
   end
 
   def dealer_turn
-    while dealer.total < 17 do
+    while dealer.total < 17
       dealer.hand << dealer.deal(deck)
     end
   end
